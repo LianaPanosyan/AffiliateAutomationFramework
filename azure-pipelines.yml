@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main  # or your desired branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+    pytest --alluredir=allure-results --env $(env)
+  displayName: 'Run tests with pytest'
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/allure-results/*.xml'
+    failTaskOnFailedTests: true
+  displayName: 'Publish test results'
+
+- task: AllureReport@1
+  inputs:
+    resultsDirectory: 'allure-results'
+    reportDirectory: 'allure-report'
+  displayName: 'Generate Allure Report'
